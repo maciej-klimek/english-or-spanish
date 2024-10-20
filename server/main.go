@@ -90,12 +90,12 @@ func callOpenAiAPI(clientData ClientRequestData) (response OpenAiResponseData) {
 	contextText := string(b)
 
 	fullPrompt := fmt.Sprintf(
-        "%s\nThe student sent you a message: %s. "+
-        "First, reply naturally to the message in %s, try to get a feel for the level at which the student uses the language, "+
-        "but reply in perfect grammar and make no spelling mistakes. "+
-        "Then, correct the mistakes (if there are any) in the student message, and create a corrected version of that sentence.",
-        contextText, clientData.Input, clientData.Language,
-    )
+		"%s\nThe student sent you a message: '%s'. The message is written in %s (clientData.Input).\n"+
+		"First, respond naturally to the message in the same language, %s (clientData.Language), using perfect grammar and making no spelling mistakes. "+
+		"Then, identify and correct any mistakes in the student's message and provide a corrected version of their sentence.",
+		contextText, clientData.Input, clientData.Language, clientData.Language,
+	)
+	
 
 	client := openai.NewClient(
 		option.WithAPIKey(apiKey), 

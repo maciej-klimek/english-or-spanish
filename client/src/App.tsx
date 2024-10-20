@@ -8,7 +8,9 @@ const App: React.FC = () => {
     setUserInput(e.target.value);
   };
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+  const handleLanguageChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ): void => {
     setLanguage(e.target.value);
   };
 
@@ -43,7 +45,12 @@ const App: React.FC = () => {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <input type="text" value={userInput} onChange={handleChange} placeholder="Enter your message" />
+        <input
+          type="text"
+          value={userInput}
+          onChange={handleChange}
+          placeholder="Enter your message"
+        />
         <select value={language} onChange={handleLanguageChange}>
           <option value="english">English</option>
           <option value="spanish">Spanish</option>

@@ -50,13 +50,11 @@ func handleClientRequest(wrt http.ResponseWriter, req *http.Request) {
 
 	fmt.Printf("	> Recived:\n	User input: %s\n	Language: %s\n", clientData.Input, clientData.Language)
 	
-	aiResponse := callOpenAiAPI(clientData)
+	callOpenAiAPI(clientData)
 
     response := map[string]interface{}{
         "status":       "success",
         "message":      "Request received",
-        "corrected_input": aiResponse.CorrInput,
-        "ai_response":  aiResponse.AiResponse,
     }
 	
 	wrt.Header().Set("Content-Type", "application/json")
@@ -116,14 +114,10 @@ func callOpenAiAPI(clientData ClientRequestData) (response OpenAiResponseData) {
 	aiResponse := completion.Choices[0].Message.Content
 	fmt.Println(aiResponse)
    
-    response.CorrInput = "corrected version of the input" 
-    response.AiResponse = aiResponse
-
 	return response
 }
 
 func main() {
-	//callOpenAiAPI("AA")
 	fmt.Println("> Server is running")
 	http.HandleFunc("/", handleClientRequest)
 	http.ListenAndServe(":3000", nil)

@@ -11,9 +11,9 @@ Format your response like the following JSON:
         "message": "%s",
         "language": "%s"
     },
-    // "openAI_response": {
-    //    "response_data": "Your full response to the student input"
-    // },
+    "openAI_response": {
+        "response_data": "Your full response to the student input"
+    },
     "corrected_input" {
         "message": "corrected student message",
         "errors": "[error_word1, correctet_word1], [error_word2, correctet_word2], ..."

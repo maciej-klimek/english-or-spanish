@@ -11,27 +11,40 @@ type ClientRequestData struct {
 	Language string `json:"language"`
 }
 
-type OpenAiResponseData struct {
-	CorrInput  string `json:"corrected_input"`
-	AiResponse string `json:"prompt_response"`
-}
-
 func handleClientRequest(wrt http.ResponseWriter, req *http.Request) {
-	fmt.Println("> handleUserInput hanlder called")
-	if req.Method != http.MethodPost {
-		err := http.StatusMethodNotAllowed
-		http.Error(wrt, "Invalid Request Method", err)
+
+	fmt.Println("> handleClientRequest called")
+
+	if req.Method == http.MethodOptions {
+		wrt.Header().Set("Access-Control-Allow-Origin", "*")
+		wrt.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		wrt.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		wrt.WriteHeader(http.StatusOK)
 		return
 	}
-	var client_data ClientRequestData
-	err := json.NewDecoder(req.Body).Decode(&client_data)
+
+	if req.Method != http.MethodPost {
+		http.Error(wrt, "Invalid Request Method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var clientData ClientRequestData
+	err := json.NewDecoder(req.Body).Decode(&clientData)
 
 	if err != nil {
 		http.Error(wrt, "Error while decoding request data", http.StatusBadRequest)
 		return
 	}
 
-	fmt.Println(client_data)
+	fmt.Printf("	> Recived:\n	User input: %s\n	Language: %s\n", clientData.Input, clientData.Language)
+
+	response := map[string]string{
+		"status":  "success",
+		"message": "Request received",
+	}
+
+	wrt.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(wrt).Encode(response)
 }
 
 func main() {

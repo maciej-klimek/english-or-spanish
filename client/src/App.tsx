@@ -1,82 +1,55 @@
 import React, { useState } from "react";
-import "./App.css"; // Zaktualizowany plik CSS
-import Avatar from "./assets/maklo.png";
-const App: React.FC = () => {
-  const [text, setText] = useState<string>("");
-  const [chatHistory, setChatHistory] = useState<string[]>([]);
 
-  // Obsługa zmiany w polu input
+const App: React.FC = () => {
+  const [userInput, setUserInput] = useState<string>("");
+  const [language, setLanguage] = useState<string>("english");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setText(e.target.value);
+    setUserInput(e.target.value);
   };
 
-  // Obsługa wysłania wiadomości
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    setLanguage(e.target.value);
+  };
+
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    if (text.trim()) {
-      // Aktualizacja historii czatu
-      setChatHistory([...chatHistory, text]);
+    if (userInput.trim()) {
+      const requestData = { user_input: userInput, language };
 
-      // Przygotowanie danych do wysłania
-      const messageData = { message: text };
-
-      // Wyślij POST request na localhost:3000
       try {
         const response = await fetch("http://localhost:3000", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(messageData), // Zawartość wysyłana jako JSON
+          body: JSON.stringify(requestData),
         });
 
         if (!response.ok) {
-          throw new Error("Błąd podczas wysyłania wiadomości");
+          throw new Error("Error while sending the message");
         }
 
-        // Opcjonalnie: obsłuż odpowiedź z serwera, np. sprawdź status
         const responseData = await response.json();
-        console.log("Odpowiedź serwera:", responseData);
+        console.log("Server response:", responseData);
       } catch (error) {
-        console.error("Błąd podczas wysyłania POST request:", error);
+        console.error("Error during POST request:", error);
       }
 
-      // Wyczyść pole tekstowe po wysłaniu wiadomości
-      setText("");
+      setUserInput("");
     }
   };
 
   return (
-    <div className="chat-container">
-      {/* Sekcja z obrazem i polem tekstowym */}
-      <div className="photo-input-section">
-        <img src={Avatar} alt="Avatar" className="avatar" />
-        <div className="input-section">
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              value={text}
-              onChange={handleChange}
-              placeholder="Enter your message"
-              className="chat-input"
-            />
-            <button type="submit" className="send-button">
-              Send
-            </button>
-          </form>
-        </div>
-      </div>
-
-      {/* Sekcja z historią czatu */}
-      <div className="chat-history-section">
-        <div className="chat-history">
-          {chatHistory.map((message, index) => (
-            <div key={index} className="chat-message">
-              {message}
-            </div>
-          ))}
-        </div>
-      </div>
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input type="text" value={userInput} onChange={handleChange} placeholder="Enter your message" />
+        <select value={language} onChange={handleLanguageChange}>
+          <option value="english">English</option>
+          <option value="spanish">Spanish</option>
+        </select>
+        <button type="submit">Send</button>
+      </form>
     </div>
   );
 };

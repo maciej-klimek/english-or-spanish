@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
-	"github.com/joho/godotenv"
 	"encoding/json"
 	"fmt"
-	"log"
 	"io"
+	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
 )
 
 type ClientRequestData struct {

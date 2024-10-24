@@ -34,13 +34,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "flex", width: "1900px", height: "1000px" }}>
+    <div style={{ display: "flex", width: "1900px", height: "920px" }}>
       {/* Div for Div 1 and Div 2*/}
       <div
         style={{
           flex: 5,
           display: "flex",
           flexDirection: "column",
+          marginRight:"1px"
         }}
       >
         {/* Div 1 */}
@@ -48,7 +49,12 @@ const App: React.FC = () => {
           <img
             src={makloImage}
             alt="Maklo"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            style={{ 
+              border: "5px solid",
+              borderColor:"white",
+              width: "100%",
+              height: "100%",
+              objectFit: "cover" }}
           />
         </div>
 
@@ -59,7 +65,10 @@ const App: React.FC = () => {
       </div>
 
       {/* Div 3 */}
-      <div style={{ flex: 1 }}>
+      <div style={{ 
+        flex: 1,
+        marginLeft:"10px"
+         }}>
         <OutputDisplay serverResponse={serverResponse} />{" "}
       </div>
     </div>

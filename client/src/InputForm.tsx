@@ -25,19 +25,48 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div>
+    <div
+    style={{
+      flex: 5,
+      display: "flex",
+      flexDirection: "column",
+    }}>
       <form onSubmit={handleSubmit}>
         <input
           type="text"
           value={userInput}
           onChange={handleChange}
           placeholder="Enter your message"
+          style={{
+            marginTop:"20px",
+            marginLeft:"5px",
+            width:"88%",
+            height:"100%",
+            fontSize:"16px"
+          }}
         />
-        <select value={language} onChange={handleLanguageChange}>
+        <select 
+        value={language}
+        onChange={handleLanguageChange}
+        style={{
+          marginLeft:"5px",
+          width:"5%",
+          height:"100%"
+        }}
+
+         >
           <option value="english">English</option>
           <option value="spanish">Spanish</option>
         </select>
-        <button type="submit">Send</button>
+        <button 
+        type="submit"
+        style={{
+          marginLeft:"5px",
+          width:"5%",
+          height:"100%"
+        }}
+        >
+          Send</button>
       </form>
     </div>
   );

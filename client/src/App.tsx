@@ -1,55 +1,76 @@
 import React, { useState } from "react";
+import InputForm from "./InputForm";
+import OutputDisplay from "./OutputDisplay";
+import makloImage from "./assets/maklo.png";
 
 const App: React.FC = () => {
-  const [userInput, setUserInput] = useState<string>("");
-  const [language, setLanguage] = useState<string>("english");
+  const [serverResponse, setServerResponse] = useState<string>("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setUserInput(e.target.value);
-  };
+  const handleSubmit = async (
+    userInput: string,
+    language: string
+  ): Promise<void> => {
+    const requestData = { user_input: userInput, language };
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    setLanguage(e.target.value);
-  };
+    try {
+      const response = await fetch("http://localhost:3000", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      });
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    if (userInput.trim()) {
-      const requestData = { user_input: userInput, language };
-
-      try {
-        const response = await fetch("http://localhost:3000", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestData),
-        });
-
-        if (!response.ok) {
-          throw new Error("Error while sending the message");
-        }
-
-        const responseData = await response.json();
-        console.log("Server response:", responseData);
-      } catch (error) {
-        console.error("Error during POST request:", error);
+      if (!response.ok) {
+        throw new Error("Error while sending the message");
       }
 
-      setUserInput("");
+      const responseData = await response.json();
+      console.log("Response from server:", responseData);
+      setServerResponse(responseData.message);
+    } catch (error) {
+      console.error("Error during POST request:", error);
     }
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input type="text" value={userInput} onChange={handleChange} placeholder="Enter your message" />
-        <select value={language} onChange={handleLanguageChange}>
-          <option value="english">English</option>
-          <option value="spanish">Spanish</option>
-        </select>
-        <button type="submit">Send</button>
-      </form>
+    <div style={{ display: "flex", width: "1900px", height: "920px" }}>
+      {/* Div for Div 1 and Div 2*/}
+      <div
+        style={{
+          flex: 5,
+          display: "flex",
+          flexDirection: "column",
+          marginRight:"1px"
+        }}
+      >
+        {/* Div 1 */}
+        <div style={{ flex: 3 }}>
+          <img
+            src={makloImage}
+            alt="Maklo"
+            style={{ 
+              border: "5px solid",
+              borderColor:"white",
+              width: "100%",
+              height: "100%",
+              objectFit: "cover" }}
+          />
+        </div>
+
+        {/* Div 2 */}
+        <div style={{ flex: 2 }}>
+          <InputForm onSubmit={handleSubmit} />
+        </div>
+      </div>
+
+      {/* Div 3 */}
+      <div style={{ 
+        flex: 1,
+        marginLeft:"10px"
+         }}>
+        <OutputDisplay serverResponse={serverResponse} />{" "}
+      </div>
     </div>
   );
 };

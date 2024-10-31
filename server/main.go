@@ -1,11 +1,17 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
 )
 
 type ClientRequestData struct {
@@ -44,17 +50,30 @@ func handleClientRequest(wrt http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Printf("	> Recived:\n	User input: %s\n	Language: %s\n", clientData.Input, clientData.Language)
+	
+	callOpenAiAPI(clientData)
 
-	response := map[string]string{
-		"status":  "success",
-		"message": "Request received",
-	}
-
+    response := map[string]interface{}{
+        "status":       "success",
+        "message":      "Request received",
+    }
+	
 	wrt.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(wrt).Encode(response)
 }
 
-func callOpenAiAPI(user_prompt string) (response OpenAiResponseData) {
+func callOpenAiAPI(clientData ClientRequestData) (response OpenAiResponseData) {
+	// Load the .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	
+	apiKey, exists := os.LookupEnv("OPENAI_API_KEY")
+	if !exists {
+		log.Fatal("OPENAI_API_KEY is not set in the environment")
+	}
+
 	context_file, err := os.Open("context.txt")
 	if err != nil {
 		panic(err)
@@ -67,13 +86,39 @@ func callOpenAiAPI(user_prompt string) (response OpenAiResponseData) {
 	}()
 
 	b, err := io.ReadAll(context_file)
-	fmt.Println(string(b))
+	contextText := string(b)
 
+	fullPrompt := fmt.Sprintf(
+		"%s\nThe student sent you a message: '%s'. The message is written in %s (clientData.Input).\n"+
+		"First, respond naturally to the message in the same language, %s (clientData.Language), using perfect grammar and making no spelling mistakes. "+
+		"Then, identify and correct any mistakes in the student's message and provide a corrected version of their sentence.",
+		contextText, clientData.Input, clientData.Language, clientData.Language,
+	)
+	
+
+	client := openai.NewClient(
+		option.WithAPIKey(apiKey), 
+	)
+	ctx := context.Background()
+
+	completion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+        Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+            openai.UserMessage(fullPrompt),
+        }),
+        Seed:  openai.Int(1),
+        Model: openai.F(openai.ChatModelGPT4),
+    })
+    if err != nil {
+        log.Fatalf("Error calling OpenAI API: %v", err)
+    }
+
+	aiResponse := completion.Choices[0].Message.Content
+	fmt.Println(aiResponse)
+   
 	return response
 }
 
 func main() {
-	//callOpenAiAPI("AA")
 	fmt.Println("> Server is running")
 	http.HandleFunc("/", handleClientRequest)
 	http.ListenAndServe(":3000", nil)

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import julianImage from "./assets/julian.jpg";
+import jefImage from "./assets/jef.jpg";
 import MicrophoneButton from "./MicButton";
 
 const App: React.FC = () => {
@@ -7,22 +8,7 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<string>("English");
   const [conversationHistory, setConversationHistory] = useState<
     { user: string; response: string }[]
-  >([
-    { user: "Hello!", response: "Hi there! How can I help you today?" },
-    {
-      user: "What is the weather like?",
-      response: "OHOHOHOHOHOHOHOHOHOHOOHOH",
-    },
-    {
-      user: "Can you tell me a joke?",
-      response:
-        "Why don't scientists trust atoms? Because they make up everything!",
-    },
-    {
-      user: "What is the weather like?",
-      response: "IOIOIOOIOOIOIOIIOIIOIOIOOOIOOIOIO",
-    },
-  ]);
+  >([]);
   const [serverResponse, setServerResponse] = useState<string>("");
 
   const handleSubmit = async (): Promise<void> => {
@@ -47,7 +33,13 @@ const App: React.FC = () => {
       console.log("Associated Response:", parsedResponse);
       setConversationHistory((prevHistory) => [
         ...prevHistory,
-        { user: userInput, response: responseData.message },
+        {
+          user: userInput,
+          response:
+            parsedResponse.openAI_response.response_data +
+            "\n" +
+            parsedResponse.corrected_input.errors,
+        },
       ]);
       setUserInput("");
     } catch (error) {
@@ -65,8 +57,7 @@ const App: React.FC = () => {
           {/* left side */}
           <div className="flex flex-col items-center w-1/2 p-6 border-r-4 border-stone-800">
             <img
-              src={julianImage}
-              alt="Maklo"
+              src={language == "English" ? julianImage : jefImage}
               className="w-full h-96 rounded-lg border-2 border-lime-700 object-cover"
             />
             <div className="w-full mt-12 mb-12">
@@ -147,10 +138,7 @@ const App: React.FC = () => {
             Send
           </button>
           {/* Microphone Button for Speech Input */}
-          <MicrophoneButton
-            language={language}
-            onTranscriptChange={handleSpeechInputChange}
-          />
+          <MicrophoneButton onTranscriptChange={handleSpeechInputChange} />
         </div>
       </div>
     </div>

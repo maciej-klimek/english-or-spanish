@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 
@@ -20,7 +19,6 @@ type ClientRequestData struct {
 }
 
 type OpenAiResponseData struct {
-	CorrInput  string `json:"corrected_input"`
 	AiResponse string `json:"prompt_response"`
 }
 
@@ -28,13 +26,14 @@ func handleClientRequest(wrt http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("> handleClientRequest called")
 
-	if req.Method == http.MethodOptions {
-		wrt.Header().Set("Access-Control-Allow-Origin", "*")
-		wrt.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		wrt.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		wrt.WriteHeader(http.StatusOK)
-		return
-	}
+	wrt.Header().Set("Access-Control-Allow-Origin", "*") 
+    wrt.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+    wrt.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+    if req.Method == http.MethodOptions {
+        wrt.WriteHeader(http.StatusOK)
+        return
+    }
 
 	if req.Method != http.MethodPost {
 		http.Error(wrt, "Invalid Request Method", http.StatusMethodNotAllowed)
@@ -49,73 +48,79 @@ func handleClientRequest(wrt http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Printf("	> Recived:\n	User input: %s\n	Language: %s\n", clientData.Input, clientData.Language)
+	fmt.Printf("	> Received:\n	User input: %s\n	Language: %s\n", clientData.Input, clientData.Language)
 	
-	callOpenAiAPI(clientData)
+	aiResponse, err := callOpenAiAPI(clientData)
+	if err != nil {
+		http.Error(wrt, "Error calling OpenAI API", http.StatusInternalServerError)
+		return
+	}
 
-    response := map[string]interface{}{
-        "status":       "success",
-        "message":      "Request received",
-    }
-	
+
+	// Respond with the AI response data
 	wrt.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(wrt).Encode(response)
+	err = json.NewEncoder(wrt).Encode(aiResponse)
+	if err != nil {
+    	http.Error(wrt, "Error encoding response data", http.StatusInternalServerError)
+    	return
 }
 
-func callOpenAiAPI(clientData ClientRequestData) (response OpenAiResponseData) {
+}
+
+func callOpenAiAPI(clientData ClientRequestData) (OpenAiResponseData, error) {
 	// Load the .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		return OpenAiResponseData{}, fmt.Errorf("Error loading .env file: %v", err)
 	}
 	
 	apiKey, exists := os.LookupEnv("OPENAI_API_KEY")
 	if !exists {
-		log.Fatal("OPENAI_API_KEY is not set in the environment")
+		return OpenAiResponseData{}, fmt.Errorf("OPENAI_API_KEY is not set in the environment")
 	}
 
-	context_file, err := os.Open("context.txt")
+	contextFile, err := os.Open("context.txt")
 	if err != nil {
-		panic(err)
+		return OpenAiResponseData{}, err
 	}
+	defer contextFile.Close()
 
-	defer func() {
-		if err = context_file.Close(); err != nil {
-			panic(err)
-		}
-	}()
-
-	b, err := io.ReadAll(context_file)
+	b, err := io.ReadAll(contextFile)
+	if err != nil {
+		return OpenAiResponseData{}, err
+	}
 	contextText := string(b)
 
 	fullPrompt := fmt.Sprintf(
-		"%s\nThe student sent you a message: '%s'. The message is written in %s (clientData.Input).\n"+
-		"First, respond naturally to the message in the same language, %s (clientData.Language), using perfect grammar and making no spelling mistakes. "+
+		"%s\nThe student sent you a message: '%s'. The message is written in %s.\n"+
+		"First, respond naturally to the message in the same language, %s, using perfect grammar and making no spelling mistakes. "+
 		"Then, identify and correct any mistakes in the student's message and provide a corrected version of their sentence.",
 		contextText, clientData.Input, clientData.Language, clientData.Language,
 	)
 	
-
 	client := openai.NewClient(
 		option.WithAPIKey(apiKey), 
 	)
 	ctx := context.Background()
 
 	completion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-        Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-            openai.UserMessage(fullPrompt),
-        }),
-        Seed:  openai.Int(1),
-        Model: openai.F(openai.ChatModelGPT4),
-    })
-    if err != nil {
-        log.Fatalf("Error calling OpenAI API: %v", err)
-    }
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(fullPrompt),
+		}),
+		Seed:  openai.Int(1),
+		Model: openai.F(openai.ChatModelGPT4),
+	})
+	if err != nil {
+		return OpenAiResponseData{}, fmt.Errorf("Error calling OpenAI API: %v", err)
+	}
 
 	aiResponse := completion.Choices[0].Message.Content
 	fmt.Println(aiResponse)
-   
-	return response
+
+
+	return OpenAiResponseData{
+		AiResponse: aiResponse,
+	}, nil
 }
 
 func main() {

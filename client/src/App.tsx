@@ -1,14 +1,27 @@
 import React, { useState } from "react";
 import julianImage from "./assets/julian.jpg";
+import MicrophoneButton from "./MicButton";
 
 const App: React.FC = () => {
   const [userInput, setUserInput] = useState<string>("");
   const [language, setLanguage] = useState<string>("English");
-  const [conversationHistory, setConversationHistory] = useState<{ user: string; response: string }[]>([
+  const [conversationHistory, setConversationHistory] = useState<
+    { user: string; response: string }[]
+  >([
     { user: "Hello!", response: "Hi there! How can I help you today?" },
-    { user: "What is the weather like?", response: "OHOHOHOHOHOHOHOHOHOHOOHOH" },
-    { user: "Can you tell me a joke?", response: "Why don't scientists trust atoms? Because they make up everything!" },
-    { user: "What is the weather like?", response: "IOIOIOOIOOIOIOIIOIIOIOIOOOIOOIOIO" },
+    {
+      user: "What is the weather like?",
+      response: "OHOHOHOHOHOHOHOHOHOHOOHOH",
+    },
+    {
+      user: "Can you tell me a joke?",
+      response:
+        "Why don't scientists trust atoms? Because they make up everything!",
+    },
+    {
+      user: "What is the weather like?",
+      response: "IOIOIOOIOOIOIOIIOIIOIOIOOOIOOIOIO",
+    },
   ]);
   const [serverResponse, setServerResponse] = useState<string>("");
 
@@ -30,11 +43,17 @@ const App: React.FC = () => {
 
       const responseData = await response.json();
       setServerResponse(responseData.message);
-      setConversationHistory((prevHistory) => [...prevHistory, { user: userInput, response: responseData.message }]);
+      setConversationHistory((prevHistory) => [
+        ...prevHistory,
+        { user: userInput, response: responseData.message },
+      ]);
       setUserInput("");
     } catch (error) {
       console.error("Error during POST request:", error);
     }
+  };
+  const handleSpeechInputChange = (transcript: string) => {
+    setUserInput(transcript);
   };
 
   return (
@@ -53,7 +72,9 @@ const App: React.FC = () => {
                 <button
                   onClick={() => setLanguage("English")}
                   className={`p-3 rounded-lg ${
-                    language === "English" ? "bg-lime-700 text-white" : "bg-stone-700 text-gray-200"
+                    language === "English"
+                      ? "bg-lime-700 text-white"
+                      : "bg-stone-700 text-gray-200"
                   }`}
                 >
                   🇬🇧 English
@@ -62,7 +83,9 @@ const App: React.FC = () => {
                 <button
                   onClick={() => setLanguage("Spanish")}
                   className={`p-3 rounded-lg ${
-                    language === "Spanish" ? "bg-lime-700 text-white" : "bg-stone-700 text-gray-200"
+                    language === "Spanish"
+                      ? "bg-lime-700 text-white"
+                      : "bg-stone-700 text-gray-200"
                   }`}
                 >
                   🇪🇸 Spanish
@@ -74,7 +97,9 @@ const App: React.FC = () => {
 
           {/* right side */}
           <div className="flex flex-col w-1/2 p-6">
-            <h2 className="text-2xl font-semibold text-stone-300">Conversation History</h2>
+            <h2 className="text-2xl font-semibold text-stone-300">
+              Conversation History
+            </h2>
             <div className="max-h-[500px] overflow-auto space-y-4 px-10">
               {conversationHistory.map((entry, index) => (
                 <div key={index} className="flex flex-col mb-8">
@@ -91,7 +116,9 @@ const App: React.FC = () => {
                   {entry.response && (
                     <div className="flex justify-start">
                       <div className="bg-stone-700 p-4 rounded-lg shadow-md max-w-[70%]">
-                        <p className="text-sm font-bold text-stone-400">Assistant:</p>
+                        <p className="text-sm font-bold text-stone-400">
+                          Assistant:
+                        </p>
                         <p className="text-stone-300">{entry.response}</p>
                       </div>
                     </div>
@@ -111,9 +138,17 @@ const App: React.FC = () => {
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
           />
-          <button onClick={handleSubmit} className="ml-4 px-4 py-2 rounded-lg bg-lime-700 hover:bg-lime-800 text-white">
+          <button
+            onClick={handleSubmit}
+            className="ml-4 px-4 py-2 rounded-lg bg-lime-700 hover:bg-lime-800 text-white"
+          >
             Send
           </button>
+          {/* Microphone Button for Speech Input */}
+          <MicrophoneButton
+            language={language}
+            onTranscriptChange={handleSpeechInputChange}
+          />
         </div>
       </div>
     </div>

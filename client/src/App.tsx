@@ -31,21 +31,48 @@ const App: React.FC = () => {
       const parsedResponse = JSON.parse(responseData.prompt_response);
       setServerResponse(parsedResponse);
       console.log("Associated Response:", parsedResponse);
+
+      const responseText = parsedResponse.openAI_response.response_data;
+
       setConversationHistory((prevHistory) => [
         ...prevHistory,
         {
           user: userInput,
-          response:
-            parsedResponse.openAI_response.response_data +
-            "\n" +
-            parsedResponse.corrected_input.errors,
+          response: responseText,
         },
       ]);
+
       setUserInput("");
     } catch (error) {
       console.error("Error during POST request:", error);
     }
   };
+  const speakText = (text: string) => {
+    if ("speechSynthesis" in window) {
+      // Sprawdź, czy nie ma innych aktywnych wypowiedzi
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel(); // przerwij, jeśli coś już jest odtwarzane
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === "English" ? "en-US" : "es-ES";
+      utterance.pitch = 1;
+      utterance.rate = 0.9;
+
+      utterance.onend = () => {
+        console.log("Speech has finished.");
+      };
+
+      utterance.onerror = (event) => {
+        console.error("Error occurred in speech synthesis:", event.error);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.log("Text-to-Speech not supported in this browser.");
+    }
+  };
+
   const handleSpeechInputChange = (transcript: string) => {
     setUserInput(transcript);
   };
@@ -57,7 +84,7 @@ const App: React.FC = () => {
           {/* left side */}
           <div className="flex flex-col items-center w-1/2 p-6 border-r-4 border-stone-800">
             <img
-              src={language == "English" ? julianImage : jefImage}
+              src={language === "English" ? julianImage : jefImage}
               className="w-full h-96 rounded-lg border-2 border-lime-700 object-cover"
             />
             <div className="w-full mt-12 mb-12">
@@ -107,13 +134,20 @@ const App: React.FC = () => {
                   )}
                   {/* AI Response on the left */}
                   {entry.response && (
-                    <div className="flex justify-start">
+                    <div className="flex justify-start items-center">
                       <div className="bg-stone-700 p-4 rounded-lg shadow-md max-w-[70%]">
                         <p className="text-sm font-bold text-stone-400">
                           Assistant:
                         </p>
                         <p className="text-stone-300">{entry.response}</p>
                       </div>
+                      <button
+                        onClick={() => speakText(entry.response)}
+                        className="ml-2 p-2 bg-lime-700 rounded-full text-white hover:bg-lime-800"
+                        aria-label="Play response"
+                      >
+                        🔊
+                      </button>
                     </div>
                   )}
                 </div>

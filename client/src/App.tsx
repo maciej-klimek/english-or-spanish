@@ -42,7 +42,9 @@ const App: React.FC = () => {
       }
 
       const responseData = await response.json();
-      setServerResponse(responseData.message);
+      const parsedResponse = JSON.parse(responseData.prompt_response);
+      setServerResponse(parsedResponse);
+      console.log("Associated Response:", parsedResponse);
       setConversationHistory((prevHistory) => [
         ...prevHistory,
         { user: userInput, response: responseData.message },

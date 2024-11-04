@@ -83,12 +83,8 @@ const App: React.FC = () => {
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language === "English" ? "en-US" : "es-ES";
-      utterance.pitch = 0.6;
+      utterance.pitch = 1;
       utterance.rate = 0.8;
-
-      utterance.onend = () => {
-        console.log("Speech has finished.");
-      };
 
       utterance.onerror = (event) => {
         console.error("Error occurred in speech synthesis:", event.error);

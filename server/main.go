@@ -26,14 +26,14 @@ func handleClientRequest(wrt http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("> handleClientRequest called")
 
-	wrt.Header().Set("Access-Control-Allow-Origin", "*") 
-    wrt.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-    wrt.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	wrt.Header().Set("Access-Control-Allow-Origin", "*")
+	wrt.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	wrt.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-    if req.Method == http.MethodOptions {
-        wrt.WriteHeader(http.StatusOK)
-        return
-    }
+	if req.Method == http.MethodOptions {
+		wrt.WriteHeader(http.StatusOK)
+		return
+	}
 
 	if req.Method != http.MethodPost {
 		http.Error(wrt, "Invalid Request Method", http.StatusMethodNotAllowed)
@@ -49,31 +49,28 @@ func handleClientRequest(wrt http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Printf("	> Received:\n	User input: %s\n	Language: %s\n", clientData.Input, clientData.Language)
-	
+
 	aiResponse, err := callOpenAiAPI(clientData)
 	if err != nil {
 		http.Error(wrt, "Error calling OpenAI API", http.StatusInternalServerError)
 		return
 	}
 
-
-	// Respond with the AI response data
 	wrt.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(wrt).Encode(aiResponse)
 	if err != nil {
-    	http.Error(wrt, "Error encoding response data", http.StatusInternalServerError)
-    	return
-}
+		http.Error(wrt, "Error encoding response data", http.StatusInternalServerError)
+		return
+	}
 
 }
 
 func callOpenAiAPI(clientData ClientRequestData) (OpenAiResponseData, error) {
-	// Load the .env file
 	err := godotenv.Load()
 	if err != nil {
 		return OpenAiResponseData{}, fmt.Errorf("Error loading .env file: %v", err)
 	}
-	
+
 	apiKey, exists := os.LookupEnv("OPENAI_API_KEY")
 	if !exists {
 		return OpenAiResponseData{}, fmt.Errorf("OPENAI_API_KEY is not set in the environment")
@@ -93,13 +90,13 @@ func callOpenAiAPI(clientData ClientRequestData) (OpenAiResponseData, error) {
 
 	fullPrompt := fmt.Sprintf(
 		"%s\nThe student sent you a message: '%s'. The message is written in %s.\n"+
-		"First, respond naturally to the message in the same language, %s, using perfect grammar and making no spelling mistakes. "+
-		"Then, identify and correct any mistakes in the student's message and provide a corrected version of their sentence.",
+			"First, respond naturally to the message in the same language, %s, using perfect grammar and making no spelling mistakes. "+
+			"Then, identify and correct any mistakes in the student's message and provide a corrected version of their sentence.",
 		contextText, clientData.Input, clientData.Language, clientData.Language,
 	)
-	
+
 	client := openai.NewClient(
-		option.WithAPIKey(apiKey), 
+		option.WithAPIKey(apiKey),
 	)
 	ctx := context.Background()
 
@@ -116,7 +113,6 @@ func callOpenAiAPI(clientData ClientRequestData) (OpenAiResponseData, error) {
 
 	aiResponse := completion.Choices[0].Message.Content
 	fmt.Println(aiResponse)
-
 
 	return OpenAiResponseData{
 		AiResponse: aiResponse,

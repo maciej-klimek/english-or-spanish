@@ -16,7 +16,8 @@ Format your response like the following JSON:
     },
     "corrected_input" {
         "message": "corrected student message",
-        "errors": "[error_word1, correctet_word1], [error_word2, correctet_word2], ..."
+        "error_list": "[error_word1, correctet_word1], [error_word2, correctet_word2], ..."
+        "error_info: "information about the errors the user made (grammatical, etc...), refer to user in second person perspective"
     }
 }
 

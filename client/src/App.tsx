@@ -13,12 +13,17 @@ const App: React.FC = () => {
   const [conversationHistory, setConversationHistory] = useState<{ user: string; response?: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [lastAssistantMessage, setLastAssistantMessage] = useState<string>("");
+  const [correctedMessage, setCorrectedMessage] = useState<string>("");
+  const [errorList, setErrorList] = useState<{ badWord: string; correctedWord: string }[]>([]);
+  const [errorInfo, setErrorInfo] = useState<string>("");
+  const [view, setView] = useState<"chat" | "error">("chat");
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     setConversationHistory([]);
     setUserInput("");
+    setView("chat");
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -51,6 +56,18 @@ const App: React.FC = () => {
           index === prevHistory.length - 1 ? { ...entry, response: responseText } : entry
         )
       );
+
+      setCorrectedMessage(parsedResponse.corrected_input.message);
+
+      const errorListData = parsedResponse.corrected_input.error_list;
+      console.log(errorListData);
+      const errorList = errorListData.map((error: [string, string]) => ({
+        badWord: error[0].trim(),
+        correctedWord: error[1].trim(),
+      }));
+
+      setErrorList(errorList);
+      setErrorInfo(parsedResponse.corrected_input.error_info);
     } catch (error) {
       console.error("Error during POST request:", error);
     } finally {
@@ -135,18 +152,56 @@ const App: React.FC = () => {
                   <img src={spanishFlag} alt="Spanish Flag" className="w-4 h-4 inline-block mr-2" />
                   Spanish
                 </button>
-                <div className="mt-3">?</div>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col w-1/2 p-6">
-            <ChatHistory
-              conversationHistory={conversationHistory}
-              loading={loading}
-              textToSpeech={textToSpeech}
-              bottomRef={bottomRef}
-            />
+            <div className="flex mt-4 space-x-4">
+              <button
+                onClick={() => setView("chat")}
+                className={`p-2 rounded-md ${
+                  view === "chat" ? "bg-lime-700 text-white" : "bg-stone-700 text-gray-200"
+                }`}
+              >
+                Chat
+              </button>
+              <button
+                onClick={() => setView("error")}
+                className={`p-2 rounded-md ${
+                  view === "error" ? "bg-lime-700 text-white" : "bg-stone-700 text-gray-200"
+                }`}
+              >
+                Errors
+              </button>
+            </div>
+            {view === "chat" ? (
+              <ChatHistory
+                conversationHistory={conversationHistory}
+                loading={loading}
+                textToSpeech={textToSpeech}
+                bottomRef={bottomRef}
+              />
+            ) : (
+              <div className="text-stone-300 overflow-y-auto max-h-full">
+                <h3 className="text-xl mb-4">I think you tried to say:</h3>
+                <p className="text-lime-300 mb-4 text-xl">"{correctedMessage}"</p>
+                <h3 className="text-xl mb-4 mt-4 pt-4 border-t-4 border-stone-800">Errors:</h3>
+                {errorList.length > 0 ? (
+                  <ul className="list-disc list-inside">
+                    {errorList.map(({ badWord, correctedWord }, index) => (
+                      <li key={index}>
+                        <span className="text-red-400">{badWord}</span> &rarr;{" "}
+                        <span className="text-lime-300">{correctedWord}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-400">No errors found.</p>
+                )}
+                <p className="text-gray-300 mt-4 pt-4 border-t-4 border-stone-800">{errorInfo}</p>
+              </div>
+            )}
           </div>
         </div>
         <UserInput

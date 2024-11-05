@@ -91,7 +91,8 @@ func callOpenAiAPI(clientData ClientRequestData) (OpenAiResponseData, error) {
 	fullPrompt := fmt.Sprintf(
 		"%s\nThe student sent you a message: '%s'. The message is written in %s.\n"+
 			"First, respond naturally to the message in the same language, %s, using perfect grammar and making no spelling mistakes. "+
-			"Then, identify and correct any mistakes in the student's message and provide a corrected version of their sentence.",
+			"Then, identify and correct any mistakes in the student's message and provide a corrected version of their sentence."+
+			"Ansear to error_info in english",
 		contextText, clientData.Input, clientData.Language, clientData.Language,
 	)
 
